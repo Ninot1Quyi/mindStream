@@ -1,0 +1,92 @@
+{
+  "conversation": {
+    "id": "79587403-6c7b-4c5a-8d8c-339f482d5824",
+    "title": "新会话",
+    "createdAt": "2025-03-12T09:31:12.621Z",
+    "updatedAt": "2025-03-12T09:31:19.928Z",
+    "branches": [
+      "29613ab3-6a29-49a4-89d0-b8a48ffe48ee",
+      "71be19bf-5154-41eb-9a2c-45be940249a0",
+      "4289093f-53a4-4aff-b02d-9d1ddaa93418",
+      "2fb06fdc-72f6-40ef-8c1e-37beeea63697",
+      "41bb01f5-e160-45c8-bc82-70b6a8d04635"
+    ]
+  },
+  "branches": {
+    "29613ab3-6a29-49a4-89d0-b8a48ffe48ee": {
+      "id": "29613ab3-6a29-49a4-89d0-b8a48ffe48ee",
+      "conversationId": "79587403-6c7b-4c5a-8d8c-339f482d5824",
+      "title": "主分支",
+      "position": {
+        "x": 100,
+        "y": 300
+      },
+      "createdAt": "2025-03-12T09:31:12.621Z",
+      "updatedAt": "2025-03-12T09:31:12.621Z",
+      "messages": [],
+      "width": 300,
+      "height": 300
+    },
+    "71be19bf-5154-41eb-9a2c-45be940249a0": {
+      "id": "71be19bf-5154-41eb-9a2c-45be940249a0",
+      "conversationId": "79587403-6c7b-4c5a-8d8c-339f482d5824",
+      "title": "新建节点",
+      "parentBranchId": "29613ab3-6a29-49a4-89d0-b8a48ffe48ee",
+      "position": {
+        "x": 250,
+        "y": 450
+      },
+      "createdAt": "2025-03-12T09:31:18.930Z",
+      "updatedAt": "2025-03-12T09:31:18.930Z",
+      "messages": [],
+      "width": 300,
+      "height": 300
+    },
+    "4289093f-53a4-4aff-b02d-9d1ddaa93418": {
+      "id": "4289093f-53a4-4aff-b02d-9d1ddaa93418",
+      "conversationId": "79587403-6c7b-4c5a-8d8c-339f482d5824",
+      "title": "新建节点",
+      "parentBranchId": "71be19bf-5154-41eb-9a2c-45be940249a0",
+      "position": {
+        "x": 250,
+        "y": 450
+      },
+      "createdAt": "2025-03-12T09:31:19.284Z",
+      "updatedAt": "2025-03-12T09:31:19.284Z",
+      "messages": [],
+      "width": 300,
+      "height": 300
+    },
+    "2fb06fdc-72f6-40ef-8c1e-37beeea63697": {
+      "id": "2fb06fdc-72f6-40ef-8c1e-37beeea63697",
+      "conversationId": "79587403-6c7b-4c5a-8d8c-339f482d5824",
+      "title": "新建节点",
+      "parentBranchId": "4289093f-53a4-4aff-b02d-9d1ddaa93418",
+      "position": {
+        "x": 250,
+        "y": 450
+      },
+      "createdAt": "2025-03-12T09:31:19.595Z",
+      "updatedAt": "2025-03-12T09:31:19.595Z",
+      "messages": [],
+      "width": 300,
+      "height": 300
+    },
+    "41bb01f5-e160-45c8-bc82-70b6a8d04635": {
+      "id": "41bb01f5-e160-45c8-bc82-70b6a8d04635",
+      "conversationId": "79587403-6c7b-4c5a-8d8c-339f482d5824",
+      "title": "新建节点",
+      "parentBranchId": "2fb06fdc-72f6-40ef-8c1e-37beeea63697",
+      "position": {
+        "x": 392.5411522633745,
+        "y": 575.9259259259259
+      },
+      "createdAt": "2025-03-12T09:31:19.928Z",
+      "updatedAt": "2025-03-12T09:39:36.207Z",
+      "messages": [],
+      "width": 300,
+      "height": 300
+    }
+  },
+  "messages": {}
+}

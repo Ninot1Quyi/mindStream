@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import styled, { createGlobalStyle } from 'styled-components';
-import { Menu, Button, Tooltip, Popconfirm, Checkbox, App } from 'antd';
+import { Menu, Button, Tooltip, Popconfirm, Checkbox, App, Modal } from 'antd';
 import { 
   ZoomInOutlined, 
   ZoomOutOutlined, 
@@ -33,7 +33,7 @@ import {
 import { createBranch, deleteBranch, updateBranch, updateBranchPositionLocal } from '../../store/slices/branchSlice';
 import { Branch, Position, Conversation } from '../../types/models';
 import BranchComponent from './BranchComponent';
-import ConnectionsLayer from './ConnectionsLayer'; // 恢复导入
+import ConnectionsLayer from './ConnectionsLayer';
 import { openModal } from '../../store/slices/uiSlice';
 import { 
   calculatePositionForChildBranch, 
