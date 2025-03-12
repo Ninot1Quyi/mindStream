@@ -10,6 +10,8 @@ import { selectBranches } from '../../store/selectors/canvasSelectors';
 import { calculatePositionForChildBranch } from '../../utils/branchPositioning';
 import { removeMessage } from '../../store/slices/messageSlice';
 import { openModal } from '../../store/slices/uiSlice';
+import { messageStore } from '../../../main/services/store';
+import { handleGenerateAIResponse as generateAIResponse } from '../../../main/ipc/messageHandlers';
 
 interface MessageComponentProps {
   message: Message;
@@ -161,6 +163,52 @@ const ActionButton = styled.button`
   }
 `;
 
+const MessageBubble = styled(MessageContainer)`
+  max-width: 100%;
+  margin: 5px 0;
+  align-self: ${props => (props.role === 'user' ? 'flex-end' : 'flex-start')};
+  border-radius: 12px;
+  background-color: ${props => {
+    switch (props.role) {
+      case 'user':
+        return 'var(--user-message-color, rgba(240, 247, 255, 0.9))';
+      case 'assistant':
+        return 'var(--ai-message-color, rgba(248, 249, 250, 0.9))';
+      case 'system':
+        return 'rgba(245, 245, 245, 0.9)';
+      default:
+        return 'rgba(255, 255, 255, 0.9)';
+    }
+  }};
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  
+  &:before {
+    content: '';
+    position: absolute;
+    ${props => props.role === 'user' ? 'right: -8px;' : 'left: -8px;'}
+    top: 10px;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    ${props => props.role === 'user' 
+      ? 'border-width: 8px 0 8px 8px;'
+      : 'border-width: 8px 8px 8px 0;'
+    }
+    border-color: ${props => {
+      const backgroundColor = props.role === 'user'
+        ? 'var(--user-message-color, rgba(240, 247, 255, 0.9))'
+        : props.role === 'assistant'
+          ? 'var(--ai-message-color, rgba(248, 249, 250, 0.9))'
+          : 'rgba(245, 245, 245, 0.9)';
+      return `transparent ${props.role === 'user' ? backgroundColor : 'transparent'} transparent ${props.role === 'user' ? 'transparent' : backgroundColor}`;
+    }};
+  }
+`;
+
 const MessageComponent: React.FC<MessageComponentProps> = ({ message }) => {
   const dispatch = useDispatch();
   const branches = useSelector((state: RootState) => selectBranches(state));
@@ -242,7 +290,7 @@ const MessageComponent: React.FC<MessageComponentProps> = ({ message }) => {
   };
   
   return (
-    <MessageContainer role={message.role}>
+    <MessageBubble role={message.role}>
       <MessageHeader>
         <MessageLabel role={message.role}>
           {getRoleLabel(message.role)}
@@ -277,8 +325,8 @@ const MessageComponent: React.FC<MessageComponentProps> = ({ message }) => {
           </ActionButton>
         </Tooltip>
       </MessageActions>
-    </MessageContainer>
+    </MessageBubble>
   );
 };
 
-export default MessageComponent; 
+export default MessageComponent;

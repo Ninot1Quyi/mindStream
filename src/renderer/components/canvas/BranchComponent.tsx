@@ -53,6 +53,7 @@ const BranchContainer = styled.div<{ isActive: boolean, position?: Position }>`
   left: ${props => props.position?.x || 0}px;
   top: ${props => props.position?.y || 0}px;
   backdrop-filter: blur(4px);
+  clip-path: inset(0 0 0 0);
   
   &:hover {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
@@ -99,10 +100,33 @@ const BranchHeader = styled.div`
     font-weight: 500;
     font-size: 16px;
     color: #333;
-    flex: 1;
+    flex: 0 1 auto;
     overflow: hidden;
     margin: 0;
     outline: none;
+    white-space: nowrap;
+    position: relative;
+    
+    /* Custom editing style */
+    &::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      height: 2px;
+      background-color: rgba(200, 200, 200, 0.5);
+      width: 0;
+      transition: width 0.3s ease;
+    }
+    
+    &:focus::after {
+      width: 100%;
+    }
+    
+    /* Remove default selection */
+    &::selection {
+      background-color: transparent;
+    }
   }
   
   .branch-actions {
@@ -168,6 +192,33 @@ const MessagesContainer = styled.div`
   &::-webkit-scrollbar-thumb {
     background-color: rgba(0, 0, 0, 0.08);
     border-radius: 10px;
+  }
+  
+  /* 消息气泡样式 */
+  .message-bubble {
+    max-width: 100%;
+    margin: 5px 0;
+    position: relative;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 0;
+      border-style: solid;
+    }
+    
+    &.user::before {
+      right: -8px;
+      border-width: 8px 0 8px 8px;
+      border-color: transparent transparent transparent var(--user-message-color, rgba(240, 247, 255, 0.9));
+    }
+    
+    &.assistant::before {
+      left: -8px;
+      border-width: 8px 8px 8px 0;
+      border-color: transparent var(--ai-message-color, rgba(248, 249, 250, 0.9)) transparent transparent;
+    }
   }
 `;
 
@@ -312,7 +363,7 @@ const BranchComponent: React.FC<BranchComponentProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const { scale, offsetX, offsetY } = useAppSelector(selectCanvasTransform);
-  const messages = useAppSelector(state => selectMessagesByBranchId(state, branch.id));
+  const messages = useAppSelector((state: RootState) => selectMessagesByBranchId(state, branch.id));
   
   // 使用ref存储当前世界坐标位置
   const currentPositionRef = useRef<Position>(branch.position);
@@ -748,12 +799,15 @@ const BranchComponent: React.FC<BranchComponentProps> = ({
   // 渲染消息列表
   const renderMessages = () => {
     return messages.map((message: Message) => (
-      <MessageComponent
-        key={message.id}
-        message={message}
-      />
+      <div key={message.id} className={`message-bubble ${message.role}`}>
+        <MessageComponent message={message} />
+      </div>
     ));
   };
+
+  useEffect(() => {
+    console.log('Messages in BranchComponent:', messages);
+  }, [messages]);
 
   return (
     <BranchContainer
@@ -831,4 +885,4 @@ const BranchComponent: React.FC<BranchComponentProps> = ({
   );
 };
 
-export default React.memo(BranchComponent); 
+export default React.memo(BranchComponent);

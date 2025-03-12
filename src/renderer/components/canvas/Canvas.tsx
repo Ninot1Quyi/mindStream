@@ -123,6 +123,32 @@ const BranchesContainer = styled.div`
   overflow: visible;
   
   /* 分支组件自身具有pointer-events:auto，所以仍然可以被交互 */
+  /* 确保消息气泡能够正确显示 */
+  & .message-bubble {
+    max-width: 100%;
+    margin: 5px 0;
+    position: relative;
+  }
+  
+  & .message-bubble::before {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-style: solid;
+  }
+  
+  & .message-bubble.user::before {
+    right: -8px;
+    border-width: 8px 0 8px 8px;
+    border-color: transparent transparent transparent var(--user-message-color, rgba(240, 247, 255, 0.9));
+  }
+  
+  & .message-bubble.assistant::before {
+    left: -8px;
+    border-width: 8px 8px 8px 0;
+    border-color: transparent var(--ai-message-color, rgba(248, 249, 250, 0.9)) transparent transparent;
+  }
 `;
 
 // 分支包装器 - 用于组织分支节点
@@ -2522,4 +2548,4 @@ const Canvas: React.FC = () => {
   );
 };
 
-export default React.memo(Canvas); 
+export default React.memo(Canvas);

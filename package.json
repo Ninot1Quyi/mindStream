@@ -11,7 +11,7 @@
     "restart": "node restart-dev.js",
     "build": "node clean.js && electron-vite build && electron-builder",
     "build:dir": "node clean.js && electron-vite build && electron-builder --dir",
-    "build:win": "node clean.js && electron-vite build && electron-builder --win",
+    "build:win": "node clean.js && electron-vite build && electron-builder --win --x64",
     "build:mac": "node clean.js && electron-vite build && electron-builder --mac",
     "build:linux": "node clean.js && electron-vite build && electron-builder --linux",
     "lint": "eslint . --ext .ts,.tsx",
@@ -31,22 +31,16 @@
     "extraMetadata": {
       "main": "dist/main/index.js"
     },
+    "defaultArch": "x64",
     "mac": {
       "category": "public.app-category.productivity",
-      "target": [
-        "dmg"
-      ]
+      "target": ["dmg"]
     },
     "win": {
-      "target": [
-        "nsis"
-      ]
+      "target": ["portable"]
     },
     "linux": {
-      "target": [
-        "AppImage",
-        "deb"
-      ],
+      "target": ["AppImage", "deb"],
       "category": "Utility"
     }
   },

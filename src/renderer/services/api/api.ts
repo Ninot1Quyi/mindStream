@@ -119,7 +119,7 @@ export const conversationApi = {
       console.log('API响应: conversationApi.getAll()', response);
       return response.conversations;
     } catch (error) {
-      return handleError(error);
+      return handleError(error as Error);
     }
   },
 
@@ -134,7 +134,7 @@ export const conversationApi = {
       console.log(`API响应: conversationApi.get(${conversationId})`, response);
       return response;
     } catch (error) {
-      return handleError(error);
+      return handleError(error as Error);
     }
   },
 
@@ -149,7 +149,7 @@ export const conversationApi = {
       console.log(`API响应: conversationApi.create(${title})`, response);
       return response;
     } catch (error) {
-      return handleError(error);
+      return handleError(error as Error);
     }
   },
 
@@ -164,7 +164,7 @@ export const conversationApi = {
       console.log(`API响应: conversationApi.updateTitle(${conversationId}, ${title})`, response);
       return response.conversation;
     } catch (error) {
-      return handleError(error);
+      return handleError(error as Error);
     }
   },
 
@@ -179,7 +179,7 @@ export const conversationApi = {
       console.log(`API响应: conversationApi.delete(${conversationId})`, response);
       return response.success;
     } catch (error) {
-      return handleError(error);
+      return handleError(error as Error);
     }
   },
 
@@ -194,7 +194,7 @@ export const conversationApi = {
       console.log('API响应: conversationApi.clearAll()', response);
       return response.success;
     } catch (error) {
-      return handleError(error);
+      return handleError(error as Error);
     }
   },
 };
@@ -290,6 +290,7 @@ export const branchApi = {
   getMessages: async (branchId: string): Promise<Message[]> => {
     try {
       const response = await window.electronAPI.branches.getMessages(branchId);
+      console.log('Messages received from API:', response.messages);
       return response.messages;
     } catch (error) {
       console.error(`获取分支 ${branchId} 消息失败:`, error);
