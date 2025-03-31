@@ -14,7 +14,7 @@ MindStream允许用户与LLM（大型语言模型）进行分支对话。与传�
 
 目前尚未达到可用程度，初步页面如下：
 
-![QQ_1743426509851](/Users/quyi/PycharmProjects/mindStream/assets/GUI.png)
+![GUI](/Users/quyi/PycharmProjects/mindStream/assets/GUI-3434322.png)
 
 ### **开发进度：**
 
