@@ -34,4 +34,10 @@ export const selectMessagesByBranchId = createSelector(
       .filter(Boolean)
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   }
+);
+
+// 获取指定分支的加载状态
+export const selectBranchLoadingState = createSelector(
+  [selectMessagesState, (state: RootState, branchId: string) => branchId],
+  (messagesState, branchId) => !!messagesState.loadingBranches[branchId]
 ); 

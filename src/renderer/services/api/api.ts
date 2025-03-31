@@ -308,12 +308,13 @@ export const messageApi = {
     branchId: string, 
     content: string, 
     sender: 'user' | 'assistant' | 'system' = 'user'
-  ): Promise<{ userMessage: Message; aiMessage?: Message }> => {
+  ): Promise<{ userMessage: Message; aiMessage?: Message; branchId: string }> => {
     try {
       const response = await window.electronAPI.messages.send(branchId, content, sender);
       return {
         userMessage: response.user_message,
         aiMessage: response.ai_message,
+        branchId
       };
     } catch (error) {
       console.error(`发送消息到分支 ${branchId} 失败:`, error);

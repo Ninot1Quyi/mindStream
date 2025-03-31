@@ -1516,6 +1516,9 @@ const Canvas: React.FC = () => {
     // 只更新UI状态
     setCursorStyle('grabbing');
     
+    // 触发自定义事件通知分支组件画布开始拖动
+    window.dispatchEvent(new CustomEvent('canvas-drag-start'));
+    
     e.preventDefault();
     e.stopPropagation();
   }, []);
@@ -1560,6 +1563,9 @@ const Canvas: React.FC = () => {
     setTimeout(() => {
       setBlurActive(false);
     }, 100);
+    
+    // 触发自定义事件通知分支组件画布结束拖动
+    window.dispatchEvent(new CustomEvent('canvas-drag-end'));
     
     // 确保最终状态与Redux同步
     if (stateRef.current.tempOffset) {

@@ -11,7 +11,7 @@ import {
 } from '@ant-design/icons';
 import { AnyAction } from '@reduxjs/toolkit';
 import { Branch, Message, Position, Size } from '../../types/models';
-import { selectMessagesByBranchId } from '../../store/selectors/messageSelectors';
+import { selectMessagesByBranchId, selectBranchLoadingState } from '../../store/selectors/messageSelectors';
 import { selectCanvasTransform } from '../../store/selectors/canvasSelectors';
 import { openModal } from '../../store/slices/uiSlice';
 import { setActiveBranch } from '../../store/slices/canvasSlice';
@@ -22,6 +22,7 @@ import MessageInput from './MessageInput';
 import useAppSelector from '../../hooks/useAppSelector';
 import { debounce } from 'lodash';
 import { AppDispatch } from '../../store';
+import { fetchBranchMessages } from '../../store/slices/messageSlice';
 
 interface BranchComponentProps {
   branch: Branch;
@@ -173,53 +174,19 @@ const BranchContent = styled.div`
 `;
 
 const MessagesContainer = styled.div`
-  padding: 12px 16px;
-  overflow-y: auto;
   flex: 1;
+  overflow-y: auto;
+  padding: 10px 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  position: relative;
-  
-  &::-webkit-scrollbar {
-    width: 4px;
-  }
-  
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  
-  &::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.08);
-    border-radius: 10px;
-  }
-  
-  /* 消息气泡样式 */
-  .message-bubble {
-    max-width: 100%;
-    margin: 5px 0;
-    position: relative;
-    
-    &::before {
-      content: '';
-      position: absolute;
-      width: 0;
-      height: 0;
-      border-style: solid;
-    }
-    
-    &.user::before {
-      right: -8px;
-      border-width: 8px 0 8px 8px;
-      border-color: transparent transparent transparent var(--user-message-color, rgba(240, 247, 255, 0.9));
-    }
-    
-    &.assistant::before {
-      left: -8px;
-      border-width: 8px 8px 8px 0;
-      border-color: transparent var(--ai-message-color, rgba(248, 249, 250, 0.9)) transparent transparent;
-    }
-  }
+  gap: 8px;
+`;
+
+const MessageWrapper = styled.div<{ role: string }>`
+  display: flex;
+  justify-content: ${props => props.role === 'user' ? 'flex-end' : 'flex-start'};
+  width: 100%;
+  margin: 4px 0;
 `;
 
 const InputContainer = styled.div`
@@ -253,6 +220,109 @@ const EmptyMessage = styled.div`
   padding: 20px;
   color: var(--light-text, #70757a);
   font-style: italic;
+`;
+
+// 节点内部加载指示器
+const NodeLoadingIndicator = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  margin: 10px 0;
+  align-self: flex-start;
+  
+  .loading-container {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .loading-spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(74, 134, 232, 0.2);
+    border-radius: 50%;
+    border-top-color: var(--primary-color, rgba(74, 134, 232, 0.8));
+    animation: node-spinner 1.2s linear infinite;
+  }
+  
+  .loading-pulse {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-color: rgba(74, 134, 232, 0.05);
+    animation: pulse-animation 1.5s ease-in-out infinite;
+  }
+  
+  .loading-text {
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--light-text, #70757a);
+    display: flex;
+    align-items: center;
+  }
+  
+  .loading-dots {
+    display: inline-flex;
+    margin-left: 3px;
+  }
+  
+  .dot {
+    width: 4px;
+    height: 4px;
+    margin: 0 2px;
+    border-radius: 50%;
+    background-color: var(--light-text, #70757a);
+    opacity: 0.7;
+  }
+  
+  .dot:nth-child(1) {
+    animation: dot-animation 1.5s infinite ease-in-out;
+  }
+  
+  .dot:nth-child(2) {
+    animation: dot-animation 1.5s infinite ease-in-out 0.3s;
+  }
+  
+  .dot:nth-child(3) {
+    animation: dot-animation 1.5s infinite ease-in-out 0.6s;
+  }
+  
+  @keyframes node-spinner {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  @keyframes pulse-animation {
+    0% {
+      transform: scale(0.8);
+      opacity: 0.3;
+    }
+    50% {
+      transform: scale(1.2);
+      opacity: 0.5;
+    }
+    100% {
+      transform: scale(0.8);
+      opacity: 0.3;
+    }
+  }
+  
+  @keyframes dot-animation {
+    0%, 100% {
+      opacity: 0.4;
+      transform: scale(0.8);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.2);
+    }
+  }
 `;
 
 // 修改调整大小手柄，支持四个边和四个角，定位在内侧
@@ -362,8 +432,10 @@ const BranchComponent: React.FC<BranchComponentProps> = ({
   const dispatch = useDispatch<AppDispatch>();
   const containerRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const { scale, offsetX, offsetY } = useAppSelector(selectCanvasTransform);
   const messages = useAppSelector((state: RootState) => selectMessagesByBranchId(state, branch.id));
+  const isLoading = useAppSelector((state: RootState) => selectBranchLoadingState(state, branch.id));
   
   // 使用ref存储当前世界坐标位置
   const currentPositionRef = useRef<Position>(branch.position);
@@ -371,6 +443,9 @@ const BranchComponent: React.FC<BranchComponentProps> = ({
   // 拖动状态
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState<Position>({ x: 0, y: 0 });
+  
+  // 添加一个ref来跟踪canvas是否正在被拖动
+  const isCanvasDraggingRef = useRef(false);
   
   // 调整大小状态
   const [isResizing, setIsResizing] = useState(false);
@@ -796,18 +871,98 @@ const BranchComponent: React.FC<BranchComponentProps> = ({
     };
   }, [isDragging, isResizing, handleDrag, handleResize, handleMouseUp, branch.position]);
 
-  // 渲染消息列表
-  const renderMessages = () => {
+  // 渲染消息列表 - 使用useMemo优化，避免不必要的重新渲染
+  const renderedMessages = useMemo(() => {
+    if (!messages || messages.length === 0) {
+      return null;
+    }
     return messages.map((message: Message) => (
-      <div key={message.id} className={`message-bubble ${message.role}`}>
+      <MessageWrapper key={message.id} role={message.role}>
         <MessageComponent message={message} />
-      </div>
+      </MessageWrapper>
     ));
-  };
-
-  useEffect(() => {
-    console.log('Messages in BranchComponent:', messages);
   }, [messages]);
+
+  // 加载分支消息 - 移除拖动条件
+  useEffect(() => {
+    const loadMessages = async () => {
+      if (branch.id) {
+        try {
+          await dispatch(fetchBranchMessages(branch.id)).unwrap();
+        } catch (error) {
+          console.error('Failed to fetch messages:', error);
+        }
+      }
+    };
+
+    loadMessages();
+  }, [branch.id, dispatch]);
+
+  // 监听新消息添加 - 优化滚动逻辑
+  useEffect(() => {
+    const handleNewMessage = () => {
+      if (messagesContainerRef.current) {
+        const container = messagesContainerRef.current;
+        // 总是滚动到底部以显示新消息
+        requestAnimationFrame(() => {
+          container.scrollTo({
+            top: container.scrollHeight,
+            behavior: 'smooth'
+          });
+        });
+      }
+    };
+
+    // 添加消息监听器
+    window.addEventListener('new-message', handleNewMessage);
+    
+    return () => {
+      window.removeEventListener('new-message', handleNewMessage);
+    };
+  }, []);
+
+  // 自动滚动到最新消息 - 优化滚动逻辑
+  useEffect(() => {
+    if (messages.length > 0) {
+      const scrollToBottom = () => {
+        if (messagesContainerRef.current) {
+          const container = messagesContainerRef.current;
+          const scrollHeight = container.scrollHeight;
+          const height = container.clientHeight;
+          const maxScroll = scrollHeight - height;
+          
+          // 使用平滑滚动
+          container.scrollTo({
+            top: maxScroll,
+            behavior: 'smooth'
+          });
+        }
+      };
+
+      // 使用 requestAnimationFrame 确保在 DOM 更新后执行滚动
+      requestAnimationFrame(scrollToBottom);
+    }
+  }, [messages]); // 只依赖消息列表变化
+
+  // 监听canvas拖动状态
+  useEffect(() => {
+    const handleCanvasDragStart = () => {
+      isCanvasDraggingRef.current = true;
+    };
+    
+    const handleCanvasDragEnd = () => {
+      isCanvasDraggingRef.current = false;
+    };
+    
+    // 添加自定义事件监听
+    window.addEventListener('canvas-drag-start', handleCanvasDragStart);
+    window.addEventListener('canvas-drag-end', handleCanvasDragEnd);
+    
+    return () => {
+      window.removeEventListener('canvas-drag-start', handleCanvasDragStart);
+      window.removeEventListener('canvas-drag-end', handleCanvasDragEnd);
+    };
+  }, []);
 
   return (
     <BranchContainer
@@ -871,8 +1026,27 @@ const BranchComponent: React.FC<BranchComponentProps> = ({
         className="branch-content"
         ref={contentRef}
       >
-        <MessagesContainer className="messages-container">
-          {renderMessages()}
+        <MessagesContainer 
+          className="messages-container"
+          ref={messagesContainerRef}
+        >
+          {renderedMessages}
+          {isLoading && (
+            <NodeLoadingIndicator>
+              <div className="loading-container">
+                <div className="loading-pulse"></div>
+                <div className="loading-spinner"></div>
+              </div>
+              <div className="loading-text">
+                思考中
+                <div className="loading-dots">
+                  <div className="dot"></div>
+                  <div className="dot"></div>
+                  <div className="dot"></div>
+                </div>
+              </div>
+            </NodeLoadingIndicator>
+          )}
         </MessagesContainer>
         <InputContainer className="input-container">
           <MessageInput branchId={branch.id} />

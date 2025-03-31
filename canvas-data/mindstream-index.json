@@ -1,13 +1,14 @@
 {
 	"conversations": {
-		"e996ba9b-9d90-4148-a8fd-ff1c8b853ffa": {
-			"id": "e996ba9b-9d90-4148-a8fd-ff1c8b853ffa",
+		"56a43434-1db6-4639-aa53-fe4d7f78b615": {
+			"id": "56a43434-1db6-4639-aa53-fe4d7f78b615",
 			"title": "新会话",
-			"createdAt": "2025-03-12T15:37:29.953Z",
-			"updatedAt": "2025-03-12T16:42:28.435Z",
+			"createdAt": "2025-03-13T02:40:22.211Z",
+			"updatedAt": "2025-03-31T13:08:09.947Z",
 			"branches": [
-				"a7a1cf2d-ce39-4e4d-a844-986551370af2",
-				"08f637f6-c407-4a6a-81f7-2bdd5466e81f"
+				"6943d491-b0b9-4129-92ad-c3229c2aadf3",
+				"78fca2fb-f027-48c4-953b-8e768b5b0534",
+				"1ad7fdbb-8667-4e33-a6f8-091ecd9855b2"
 			]
 		}
 	}

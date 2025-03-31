@@ -345,19 +345,22 @@ const MessageInput: React.FC<MessageInputProps> = ({ branchId }) => {
       return;
     }
     
-    // 发送普通消息
-    dispatch(sendMessage({
-      branchId,
-      content: content.trim(),
-      role: 'user'
-    }) as any);
-    
+    // 保存当前消息内容，然后清空输入框
+    const messageContent = content.trim();
     setContent('');
     
     // 重置文本区域高度
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
+    
+    // 发送普通消息
+    dispatch(sendMessage({
+      branchId,
+      content: messageContent,
+      role: 'user'
+    }) as any);
+    
   }, [branchId, content, dispatch, executeCommand]);
   
   // 处理按键事件

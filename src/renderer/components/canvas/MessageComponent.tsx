@@ -12,6 +12,7 @@ import { removeMessage } from '../../store/slices/messageSlice';
 import { openModal } from '../../store/slices/uiSlice';
 import { messageStore } from '../../../main/services/store';
 import { handleGenerateAIResponse as generateAIResponse } from '../../../main/ipc/messageHandlers';
+import { AppDispatch } from '../../store';
 
 interface MessageComponentProps {
   message: Message;
@@ -186,6 +187,20 @@ const MessageBubble = styled(MessageContainer)`
   display: flex;
   flex-direction: column;
   
+  /* Add fade-in animation for new messages */
+  animation: message-fade-in 0.3s ease-out;
+  
+  @keyframes message-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
   &:before {
     content: '';
     position: absolute;
@@ -210,22 +225,22 @@ const MessageBubble = styled(MessageContainer)`
 `;
 
 const MessageComponent: React.FC<MessageComponentProps> = ({ message }) => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const branches = useSelector((state: RootState) => selectBranches(state));
   
-  // 格式化时间戳
-  const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
+  // 格式化时间戳 - 使用useMemo缓存结果
+  const formattedTimestamp = React.useMemo(() => {
+    const date = new Date(message.timestamp);
     return date.toLocaleTimeString('zh-CN', {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit'
     });
-  };
+  }, [message.timestamp]);
   
-  // 获取角色标签
-  const getRoleLabel = (role: string) => {
-    switch (role) {
+  // 获取角色标签 - 使用useMemo缓存结果
+  const roleLabel = React.useMemo(() => {
+    switch (message.role) {
       case 'user':
         return '用户';
       case 'assistant':
@@ -233,12 +248,12 @@ const MessageComponent: React.FC<MessageComponentProps> = ({ message }) => {
       case 'system':
         return '系统';
       default:
-        return role;
+        return message.role;
     }
-  };
+  }, [message.role]);
   
-  // 复制消息内容
-  const handleCopy = () => {
+  // 复制消息内容 - 使用useCallback避免重新创建函数
+  const handleCopy = React.useCallback(() => {
     navigator.clipboard.writeText(message.content)
       .then(() => {
         console.log('消息已复制到剪贴板');
@@ -246,82 +261,56 @@ const MessageComponent: React.FC<MessageComponentProps> = ({ message }) => {
       .catch(err => {
         console.error('复制失败:', err);
       });
-  };
+  }, [message.content]);
   
-  // 从此消息创建分支
-  const handleCreateBranch = () => {
-    // 获取父分支
-    const parentBranch = Object.values(branches).find(
-      branch => branch.id === message.branchId
-    );
-    
-    if (!parentBranch) {
-      console.error('无法找到消息所属的分支');
-      return;
-    }
+  // 从此消息创建新分支 - 使用useCallback避免重新创建函数
+  const handleCreateBranch = React.useCallback(() => {
+    const sourceBranch = branches[message.branchId];
+    if (!sourceBranch) return;
     
     // 计算新分支的位置
     const existingBranches = Object.values(branches);
-    let position = { x: 0, y: 0 };
+    const position = calculatePositionForChildBranch(
+      sourceBranch.position,
+      existingBranches
+    );
     
-    if (parentBranch.position) {
-      position = calculatePositionForChildBranch(
-        parentBranch.position,
-        existingBranches
-      );
-    }
-    
-    // 显示创建分支的模态框
-    dispatch(openModal('create-branch-from-message') as any);
-    
-    // 存储数据到会话存储或Redux中，以便模态框访问
-    sessionStorage.setItem('branchFromMessageData', JSON.stringify({
-      parentBranchId: parentBranch.id,
+    // 创建分支
+    dispatch(createBranchFromMessage({
       messageId: message.id,
-      position
+      parentBranchId: message.branchId,
+      position,
     }));
-  };
+  }, [branches, message.branchId, message.id, dispatch]);
   
-  // 删除消息
-  const handleDelete = () => {
-    if (window.confirm('确定要删除这条消息吗？')) {
-      dispatch(removeMessage(message.id) as any);
-    }
-  };
-  
+  // 删除消息 - 使用useCallback避免重新创建函数
+  const handleDelete = React.useCallback(() => {
+    dispatch(openModal('confirm-delete-message'));
+    // 存储要删除的消息ID，以便确认对话框访问
+    sessionStorage.setItem('messageToDelete', message.id);
+  }, [dispatch, message.id]);
+
   return (
     <MessageBubble role={message.role}>
       <MessageHeader>
-        <MessageLabel role={message.role}>
-          {getRoleLabel(message.role)}
-        </MessageLabel>
-        <MessageTimestamp>
-          {formatTimestamp(message.timestamp)}
-        </MessageTimestamp>
+        <MessageLabel role={message.role}>{roleLabel}</MessageLabel>
+        <MessageTimestamp>{formattedTimestamp}</MessageTimestamp>
       </MessageHeader>
-      
-      <MessageContent>
-        {message.content}
-      </MessageContent>
-      
+      <MessageContent>{message.content}</MessageContent>
       <MessageActions>
         <Tooltip title="复制">
           <ActionButton onClick={handleCopy}>
-            <CopyOutlined />
+            <CopyOutlined style={{ fontSize: '14px' }} />
           </ActionButton>
         </Tooltip>
-        
-        {message.role !== 'system' && (
-          <Tooltip title="从此处创建分支">
-            <ActionButton onClick={handleCreateBranch}>
-              <BranchesOutlined />
-            </ActionButton>
-          </Tooltip>
-        )}
-        
+        <Tooltip title="创建分支">
+          <ActionButton onClick={handleCreateBranch}>
+            <BranchesOutlined style={{ fontSize: '14px' }} />
+          </ActionButton>
+        </Tooltip>
         <Tooltip title="删除">
           <ActionButton onClick={handleDelete}>
-            <DeleteOutlined />
+            <DeleteOutlined style={{ fontSize: '14px' }} />
           </ActionButton>
         </Tooltip>
       </MessageActions>
@@ -329,4 +318,9 @@ const MessageComponent: React.FC<MessageComponentProps> = ({ message }) => {
   );
 };
 
-export default MessageComponent;
+// 使用React.memo包装组件，只有当props变化时才重新渲染
+export default React.memo(MessageComponent, (prevProps, nextProps) => {
+  // 只有当消息ID和内容相同时，认为是相同的消息，不需要重新渲染
+  return prevProps.message.id === nextProps.message.id && 
+         prevProps.message.content === nextProps.message.content;
+});
