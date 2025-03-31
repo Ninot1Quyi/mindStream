@@ -58,10 +58,6 @@ MindStream允许用户与LLM（大型语言模型）进行分支对话。与传�
 - **Styled Components**: CSS-in-JS样式解决方案
 - **React Router**: 页面路由管理
 
-### AI/机器学习集成
-- 支持多种AI服务，包括OpenAI、Google Generative AI、Anthropic等
-- 支持各种文档格式的嵌入处理
-
 ## 项目结构
 
 ```
